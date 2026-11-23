@@ -8,6 +8,7 @@ qBittorrent starts with the desktop and keeps everything (its settings, its torr
 
 ## Software
 * [qBittorrent](https://www.qbittorrent.org/) 5.1.4 - Ubuntu 26.04's package, installed when the image is built
+* [Firefox](https://www.mozilla.org/firefox/) - Mozilla's build from the Mozilla Team PPA (Ubuntu's own firefox package is the snap)
 * 7-Zip (with RAR support), mktorrent, buildtorrent, curl, wget, file, lsof, ping, mtr, the OpenSSH client, iproute2, net-tools, tree, zip/unzip, bzip2, xz-utils, zstd and bash-completion
 
 ## Get the image or build it locally
@@ -16,8 +17,8 @@ docker pull ghcr.io/fullaxx/ubuntu-desktop-xfce-qbittorrent
 
 docker build -t="ghcr.io/fullaxx/ubuntu-desktop-xfce-qbittorrent" https://github.com/Fullaxx/ubuntu-desktop-xfce-qbittorrent.git
 ```
-`:latest` and `:26.04` (ubuntu-desktop-xfce 26.04) are the same image. It is rebuilt at every push to `master`, with Ubuntu's packages as they are then,
-so a rebuild picks up Ubuntu's updates to qBittorrent.
+`:latest` and `:26.04` (ubuntu-desktop-xfce 26.04) are the same image. It is rebuilt at every push to `master`, with the packages as they are then,
+so a rebuild picks up Ubuntu's updates to qBittorrent and Mozilla's to Firefox.
 
 ## Volume: /data
 Mount a directory on /data to keep your downloads, qBittorrent's settings and its torrents when the container is re-created
@@ -52,6 +53,13 @@ Publish it so that peers can connect to you (not when qBittorrent is on a VPN co
 ## VPN
 qBittorrent has no VPN of its own: run it on the network of a VPN container, and its traffic goes through the VPN. \
 How to set that up, with an OpenVPN and a WireGuard example: [NETWORKING.md](NETWORKING.md)
+
+## Firefox
+Firefox is in the image: Applications > Ubuntu Desktop > Network > Browsers > Firefox. \
+Give the container more shared memory, or Firefox's tabs crash ([why](https://github.com/Fullaxx/ubuntu-desktop-xfce/blob/master/troubleshooting/WEB_BROWSERS.md))
+```
+--shm-size 2g
+```
 
 ## Magnet links
 Firefox in the container's desktop sends the magnet links you click to qBittorrent: [MAGNET_LINKS.md](MAGNET_LINKS.md)

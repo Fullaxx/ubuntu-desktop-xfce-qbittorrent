@@ -1,6 +1,6 @@
 #!/bin/bash
-# Start an ubuntu-desktop-xfce-qbittorrent image the way users do and check the whole path: the image's tools and
-# qBittorrent's magnet link handler, the desktop, /data's folders, qBittorrent's settings and torrents on /data,
+# Start an ubuntu-desktop-xfce-qbittorrent image the way users do and check the whole path: the image's tools,
+# Firefox and qBittorrent's magnet link handler, the desktop, /data's folders, qBittorrent's settings and torrents on /data,
 # qBittorrent running with the default config (listening on 6881), and a .torrent dropped in /data/autoload added,
 # copied to /data/torrents and removed from /data/autoload. Options after the image go to docker run, such as a
 # non-root desktop user. Run it on a Docker host, as .github/workflows/ci.yml does before it publishes:
@@ -45,12 +45,15 @@ trap 'docker rm -f -v "${NAME}" >/dev/null 2>&1 || true' EXIT
 
 docker run -d --name "${NAME}" "$@" "${IMAGE}" >/dev/null
 
-# The image: qBittorrent and the tools the Dockerfile installs (7zip-rar gives 7z its RAR codec)
-for TOOL in qbittorrent 7z buildtorrent mktorrent ping ip lsof netstat tree file zip unzip zstd mtr ssh; do
+# The image: qBittorrent, Firefox and the tools the Dockerfile installs (7zip-rar gives 7z its RAR codec)
+for TOOL in qbittorrent firefox 7z buildtorrent mktorrent ping ip lsof netstat tree file zip unzip zstd mtr ssh; do
   docker exec "${NAME}" which "${TOOL}" >/dev/null || fail "${TOOL} is not installed"
 done
 SEVENZIP=$(docker exec "${NAME}" 7z i)
 grep -q -E '^ *[0-9]+ +[A-Z]* +[0-9A-F]+ +Rar5$' <<<"${SEVENZIP}" || fail "7z lists no RAR codec (7zip-rar)"
+# Firefox is Mozilla's build, from the Mozilla Team PPA (Ubuntu's own firefox package is a transition to the snap)
+FIREFOX=$(docker exec "${NAME}" firefox --version 2>/dev/null || true)
+[[ "${FIREFOX}" == "Mozilla Firefox "* ]] || fail "firefox is not Mozilla's build from the Mozilla Team PPA (firefox --version: ${FIREFOX})"
 # qBittorrent's desktop entry makes it the desktop's handler for magnet links, which Firefox asks the desktop for
 docker exec "${NAME}" grep -q -x -F 'x-scheme-handler/magnet=org.qbittorrent.qBittorrent.desktop;' /usr/share/applications/mimeinfo.cache \
   || fail "qBittorrent is not the desktop's handler for magnet links"

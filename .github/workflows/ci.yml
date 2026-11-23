@@ -4,10 +4,11 @@
 # plus :<branch>-<short sha> for each build. "Run workflow" in the Actions tab does the same by hand for
 # the branch it runs on (any other branch publishes only its <branch>-<short sha>).
 #
-# The image is built FROM ghcr.io/fullaxx/ubuntu-desktop-xfce:26.04 as it is when this runs, with Ubuntu's
-# packages (qBittorrent's included) as they are then: each run installs them again (APT_REFRESH). After
-# ubuntu-desktop-xfce publishes a new image, or Ubuntu a new qBittorrent, "Run workflow" on master rebuilds
-# this one with it (a commit that was already built gets its <branch>-<short sha> pushed again).
+# The image is built FROM ghcr.io/fullaxx/ubuntu-desktop-xfce:26.04 as it is when this runs, with the apt
+# packages as they are then (Ubuntu's, qBittorrent included, and Firefox from the Mozilla Team PPA): each run
+# installs them again (APT_REFRESH). After ubuntu-desktop-xfce publishes a new image, or Ubuntu or Mozilla new
+# packages, "Run workflow" on master rebuilds this one with them (a commit that was already built gets its
+# <branch>-<short sha> pushed again).
 name: CI
 
 on:
@@ -66,7 +67,7 @@ jobs:
 
       # build-contexts: the base image looked up above, by digest (a build context named after
       # a FROM line's image replaces it); the GitHub Actions cache keeps unchanged layers
-      # (APT_REFRESH: this run's id, so that the apt-get layer is built again with Ubuntu's packages as they are now)
+      # (APT_REFRESH: this run's id, so that the apt-get layer is built again with the packages as they are now)
       - name: Build the image
         uses: docker/build-push-action@v7
         with:

@@ -1,7 +1,7 @@
 # Configuring Magnet Links
 
 Firefox in the container's desktop can send the magnet links you click to qBittorrent. \
-Applications > Ubuntu Desktop > Network > Browsers > Firefox installs Firefox the first time you open it.
+Firefox is in the image: Applications > Ubuntu Desktop > Network > Browsers > Firefox.
 
 ## Firefox
 qBittorrent's desktop entry makes it the desktop's application for magnet links, and Firefox asks the desktop which
