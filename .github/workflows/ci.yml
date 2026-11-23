@@ -1,0 +1,106 @@
+# Builds the image, tests it (tests/qbittorrent.sh, as root and as the built-in ubuntu user) and pushes it to
+# ghcr.io/fullaxx/ubuntu-desktop-xfce-qbittorrent:
+#   master -> :latest (the README's docker pull) and :26.04, the same image
+# plus :<branch>-<short sha> for each build. "Run workflow" in the Actions tab does the same by hand for
+# the branch it runs on (any other branch publishes only its <branch>-<short sha>).
+#
+# The image is built FROM ghcr.io/fullaxx/ubuntu-desktop-xfce:26.04 as it is when this runs, with Ubuntu's
+# packages (qBittorrent's included) as they are then: each run installs them again (APT_REFRESH). After
+# ubuntu-desktop-xfce publishes a new image, or Ubuntu a new qBittorrent, "Run workflow" on master rebuilds
+# this one with it (a commit that was already built gets its <branch>-<short sha> pushed again).
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    # qBittorrent is in the image: the test runs install nothing at the container's first start
+    timeout-minutes: 30
+
+    # GITHUB_TOKEN is read-only by default in this repo; pushing to ghcr.io needs packages: write
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      TEST_TAG: ubuntu-desktop-xfce-qbittorrent:ci-test
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # :latest and :26.04 from master, plus <branch>-<short sha> for each build
+      # (by branch name, so :latest stays with master even if GitHub's default branch changes)
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/fullaxx/ubuntu-desktop-xfce-qbittorrent
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=26.04,enable=${{ github.ref == 'refs/heads/master' }}
+            type=sha,prefix={{branch}}-
+
+      # The base image as it is now: the FROM line's image (found as build.sh finds it),
+      # looked up once, so that both builds below use the same digest
+      - name: Look up the base images
+        id: bases
+        run: |
+          CONTEXTS=""
+          while read -r REF; do
+            DIGEST=$(docker buildx imagetools inspect "${REF}" --format '{{.Manifest.Digest}}')
+            if [[ "${DIGEST}" != sha256:* ]]; then
+              echo "::error::Could not look up ${REF}"
+              exit 1
+            fi
+            echo "${REF}: ${DIGEST}"
+            CONTEXTS="${CONTEXTS}${REF}=docker-image://${REF}@${DIGEST}"$'\n'
+          done < <(grep '^FROM' Dockerfile | awk '{print $2}')
+          printf 'contexts<<EOF\n%sEOF\n' "${CONTEXTS}" >> "${GITHUB_OUTPUT}"
+
+      # build-contexts: the base image looked up above, by digest (a build context named after
+      # a FROM line's image replaces it); the GitHub Actions cache keeps unchanged layers
+      # (APT_REFRESH: this run's id, so that the apt-get layer is built again with Ubuntu's packages as they are now)
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          build-contexts: ${{ steps.bases.outputs.contexts }}
+          build-args: APT_REFRESH=${{ github.run_id }}
+          load: true
+          tags: ${{ env.TEST_TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Check the desktop, /data and qBittorrent (root desktop)
+        run: tests/qbittorrent.sh "${TEST_TAG}"
+
+      - name: Check the desktop, /data and qBittorrent (the built-in ubuntu user)
+        run: tests/qbittorrent.sh "${TEST_TAG}" -e VNCUSERMAP=ubuntu/1000
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The same build again, on the same base image and with the same APT_REFRESH: every layer comes
+      # from the build above, so this pushes the image that was just tested
+      - name: Push the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          build-contexts: ${{ steps.bases.outputs.contexts }}
+          build-args: APT_REFRESH=${{ github.run_id }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha

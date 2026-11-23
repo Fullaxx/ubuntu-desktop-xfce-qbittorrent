@@ -1,0 +1,7 @@
+{
+    "/data/autoload": {
+        "add_torrent_params": {
+        },
+        "recursive": false
+    }
+}

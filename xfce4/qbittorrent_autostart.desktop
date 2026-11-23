@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=qBittorrent
+Comment=Prepares /data for qBittorrent, then starts it
+Exec=/usr/local/bin/qbittorrent_autostart.sh
+OnlyShowIn=XFCE;
+Terminal=false
+StartupNotify=false
