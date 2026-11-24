@@ -18,7 +18,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # qBittorrent is in the image: the test runs install nothing at the container's first start
     timeout-minutes: 30
 
