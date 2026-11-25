@@ -7,9 +7,10 @@ LABEL author="Brett Kuskie <fullaxx@gmail.com>"
 
 # ------------------------------------------------------------------------------
 # Add the Mozilla Team PPA, for Firefox
-# (the base image's script, the one its Firefox launcher runs: the PPA's key, its sources, and a pin above Ubuntu's
-# archive, whose firefox package is a transition to the snap; the lists from its apt-get update are cleaned up here)
-RUN /app/scripts/prepare_firefox_ppa_direct.sh && \
+# (the base image's script, the one its Firefox and Thunderbird launchers run: the PPA's key, its sources, and a pin
+# above Ubuntu's archive, whose firefox package is a transition to the snap; the lists from its apt-get update are
+# cleaned up here)
+RUN /app/scripts/prepare_mozilla_ppa_direct.sh && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
 
