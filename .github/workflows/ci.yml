@@ -1,8 +1,10 @@
 # Builds the image, tests it (tests/qbittorrent.sh, as root and as the built-in ubuntu user) and pushes it to
 # ghcr.io/fullaxx/ubuntu-desktop-xfce-qbittorrent:
-#   master -> :latest (the README's docker pull) and :26.04, the same image
+#   master -> :latest (the README's docker pull), :26.04 and :resolute, the same image
 # plus :<branch>-<short sha> for each build. "Run workflow" in the Actions tab does the same by hand for
 # the branch it runs on (any other branch publishes only its <branch>-<short sha>).
+# :resolute names the release by its codename, the way Ubuntu's own image does (ubuntu:resolute is
+# ubuntu:26.04).
 #
 # The image is built FROM ghcr.io/fullaxx/ubuntu-desktop-xfce:26.04 as it is when this runs, with the apt
 # packages as they are then (Ubuntu's, qBittorrent included, and Firefox from the Mozilla Team PPA): each run
@@ -36,7 +38,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # :latest and :26.04 from master, plus <branch>-<short sha> for each build
+      # :latest, :26.04 and :resolute from master, plus <branch>-<short sha> for each build
       # (by branch name, so :latest stays with master even if GitHub's default branch changes)
       - name: Extract Docker metadata
         id: meta
@@ -46,6 +48,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=26.04,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=resolute,enable=${{ github.ref == 'refs/heads/master' }}
             type=sha,prefix={{branch}}-
 
       # The base image as it is now: the FROM line's image (found as build.sh finds it),

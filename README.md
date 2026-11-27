@@ -17,7 +17,7 @@ docker pull ghcr.io/fullaxx/ubuntu-desktop-xfce-qbittorrent
 
 docker build -t="ghcr.io/fullaxx/ubuntu-desktop-xfce-qbittorrent" https://github.com/Fullaxx/ubuntu-desktop-xfce-qbittorrent.git
 ```
-`:latest` and `:26.04` (ubuntu-desktop-xfce 26.04) are the same image. It is rebuilt at every push to `master`, with the packages as they are then,
+`:latest`, `:26.04` and `:resolute` (ubuntu-desktop-xfce 26.04) are the same image. It is rebuilt at every push to `master`, with the packages as they are then,
 so a rebuild picks up Ubuntu's updates to qBittorrent and Mozilla's to Firefox.
 
 ## Volume: /data
