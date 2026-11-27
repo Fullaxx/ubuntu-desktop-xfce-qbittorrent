@@ -39,6 +39,8 @@ RUN apt-get update && \
       net-tools \
       openssh-client \
       qbittorrent \
+      redir \
+      socat \
       tree \
       unzip \
       wget \
